@@ -376,7 +376,7 @@
     <div class="macro-row">
         <div class="macro-col">
             <div class="macro-box">
-                <div class="macro-bar-fill" :style="{height: barPct(macros.p, targets.p) + '%'}"></div>
+                <div class="macro-bar-fill" :style="{height: barPct(consumed.p, dietTotals.p) + '%'}"></div>
                 <div class="macro-box-content">
                     <span :class="['macro-remaining', macros.p < 0 ? 'over' : '']">{{ macros.p.toFixed(1) }}<small style="font-size:10px;font-weight:300"> g</small></span>
                     <span class="macro-consumed">{{ consumed.p.toFixed(1) }} g</span>
@@ -386,7 +386,7 @@
         </div>
         <div class="macro-col">
             <div class="macro-box">
-                <div class="macro-bar-fill" :style="{height: barPct(macros.c, targets.c) + '%'}"></div>
+                <div class="macro-bar-fill" :style="{height: barPct(consumed.c, dietTotals.c) + '%'}"></div>
                 <div class="macro-box-content">
                     <span :class="['macro-remaining', macros.c < 0 ? 'over' : '']">{{ macros.c.toFixed(1) }}<small style="font-size:10px;font-weight:300"> g</small></span>
                     <span class="macro-consumed">{{ consumed.c.toFixed(1) }} g</span>
@@ -396,7 +396,7 @@
         </div>
         <div class="macro-col">
             <div class="macro-box">
-                <div class="macro-bar-fill" :style="{height: barPct(macros.g, targets.g) + '%'}"></div>
+                <div class="macro-bar-fill" :style="{height: barPct(consumed.g, dietTotals.g) + '%'}"></div>
                 <div class="macro-box-content">
                     <span :class="['macro-remaining', macros.g < 0 ? 'over' : '']">{{ macros.g.toFixed(1) }}<small style="font-size:10px;font-weight:300"> g</small></span>
                     <span class="macro-consumed">{{ consumed.g.toFixed(1) }} g</span>
@@ -663,15 +663,22 @@
                 }));
                 return {p,c,g};
             },
+            dietTotals() {
+                // Total macros of the full day diet (checked + unchecked)
+                let p=0,c=0,g=0;
+                this.currentDiet.forEach(m => m.foods.forEach(f => {
+                    p+=f.p; c+=f.c; g+=f.g;
+                }));
+                return {p,c,g};
+            },
             sortedFoodDatabase() {
                 return [...this.foodDatabase].sort((a,b) => a.name.localeCompare(b.name));
             }
         },
         methods: {
-            barPct(remaining, target) {
-                const consumed = target - remaining;
-                const pct = Math.min(100, Math.max(0, (consumed / target) * 100));
-                return pct.toFixed(1);
+            barPct(consumed, total) {
+                if (!total || total <= 0) return 0;
+                return Math.min(100, Math.max(0, (consumed / total) * 100)).toFixed(1);
             },
             selectDay(i) {
                 this.activeDay = i;
