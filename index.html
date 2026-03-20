@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hybrid Diet Tracker</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2e79d8">
+    <meta name="theme-color" content="#0972e6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -38,7 +40,7 @@
 
         /* Header */
         .app-header {
-            padding: 52px 20px 20px;
+            padding: calc(env(safe-area-inset-top) + 18px) 20px 20px;
         }
         .tracker-label {
             font-size: 11px;
@@ -778,15 +780,17 @@
                 b.style.backgroundRepeat = 'no-repeat';
                 b.style.backgroundPosition = 'top center';
                 document.body.classList.remove('theme-night');
+                // Update iOS status bar color
+                const tc = document.querySelector('meta[name=theme-color]');
                 if (h >= 6 && h < 16) {
-                    // Day
+                    if (tc) tc.setAttribute('content', '#0972e6');
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #ffffff ${cutEnd}%, #ffffff 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #0972e6 0%, #ffffff 100%)`;
                     b.style.backgroundColor = '#ffffff';
                     root.style.setProperty('--card-bg', '#f4f8f9');
                     root.style.setProperty('--macro-box-bg', '#d7e8fc');
                     root.style.setProperty('--macro-bar-fill', 'rgba(9,114,230,0.18)');
                 } else if (h >= 16 && h < 19) {
-                    // Afternoon
+                    if (tc) tc.setAttribute('content', '#d89603');
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #ffffff ${cutEnd}%, #ffffff 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #d89603 0%, #ffffff 100%)`;
                     b.style.backgroundColor = '#ffffff';
                     root.style.setProperty('--card-bg', '#f4f8f9');
@@ -796,6 +800,7 @@
                 } else {
                     // Night
                     document.body.classList.add('theme-night');
+                    if (tc) tc.setAttribute('content', '#030721');
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #2c409a ${cutEnd}%, #2c409a 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #030721 0%, #2c409a 100%)`;
                     b.style.backgroundColor = '#2c409a';
                     root.style.setProperty('--card-bg', 'rgba(255,255,255,0.08)');
