@@ -131,20 +131,42 @@
         }
 
         /* Macro boxes */
-        .macro-row { display: flex; gap: 8px; padding: 0 20px 20px; }
+        .macro-row { display: flex; gap: 8px; padding: 0 20px 4px; }
+        .macro-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .macro-box {
-            flex: 1;
+            width: 100%;
             background: var(--macro-box-bg, #d7e8fc);
-            border-radius: 10px; padding: 10px 8px; text-align: center;
+            border-radius: 10px;
+            height: 86px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
         }
-        .macro-box-label {
-            font-size: 11px; font-weight: 300;
-            color: var(--grey); margin-bottom: 4px;
+        /* Fill bar — grows from bottom */
+        .macro-bar-fill {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: var(--macro-bar-fill, rgba(0,0,0,0.1));
+            transition: height 0.5s cubic-bezier(0.4,0,0.2,1);
         }
-        .macro-box-value {
-            font-size: 18px; font-weight: 400; color: var(--black); line-height: 1;
+        /* Content sits above the fill */
+        .macro-box-content {
+            position: relative; z-index: 1;
+            height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            padding: 10px 8px;
         }
-        .macro-box-unit { font-size: 11px; font-weight: 300; color: var(--black); }
+        .macro-remaining {
+            font-size: 18px; font-weight: 500; color: var(--black); line-height: 1;
+        }
+        .macro-remaining.over { color: #c0392b; }
+        .macro-consumed {
+            font-size: 12px; font-weight: 300; color: var(--grey); line-height: 1;
+        }
+        .macro-box-name {
+            font-size: 11px; font-weight: 400; color: var(--grey);
+        }
 
         /* Meals section */
         .meals-section { padding: 4px 12px 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -153,6 +175,19 @@
             background: var(--card-bg, #f4f8f9);
             border-radius: 16px; overflow: hidden;
         }
+
+        /* Night mode meal card text */
+        body.theme-night .meal-name  { color: #e8edf5; }
+        body.theme-night .meal-kcal  { color: #9bb0cc; }
+        body.theme-night .food-name  { color: #dde5f0; }
+        body.theme-night .food-name.checked { color: #6a7f96; }
+        body.theme-night .food-macros { color: #8096ae; }
+        body.theme-night .food-qty   { color: #9bb0cc; }
+        body.theme-night .food-kcal-pill { color: #9bb0cc; }
+        body.theme-night .macro-strip-label { color: #9bb0cc; }
+        body.theme-night .macro-strip-val   { color: #dde5f0; }
+        body.theme-night .macro-remaining { color: #e8edf5; }
+        body.theme-night .macro-consumed  { color: #7a90a8; }
 
         .meal-top { padding: 14px 16px 0; cursor: pointer; user-select: none; }
         .meal-top-row { display: flex; align-items: flex-start; justify-content: space-between; }
@@ -337,17 +372,35 @@
 
     <!-- MACRO BOXES -->
     <div class="macro-row">
-        <div class="macro-box">
-            <div class="macro-box-label">Proteína</div>
-            <span class="macro-box-value">{{ Math.round(macros.p) }}</span><span class="macro-box-unit"> g</span>
+        <div class="macro-col">
+            <div class="macro-box">
+                <div class="macro-bar-fill" :style="{height: barPct(macros.p, targets.p) + '%'}"></div>
+                <div class="macro-box-content">
+                    <span :class="['macro-remaining', macros.p < 0 ? 'over' : '']">{{ macros.p.toFixed(1) }}<small style="font-size:10px;font-weight:300"> g</small></span>
+                    <span class="macro-consumed">{{ consumed.p.toFixed(1) }} g</span>
+                </div>
+            </div>
+            <div class="macro-box-name">Proteína</div>
         </div>
-        <div class="macro-box">
-            <div class="macro-box-label">Carboidrato</div>
-            <span class="macro-box-value">{{ Math.round(macros.c) }}</span><span class="macro-box-unit"> g</span>
+        <div class="macro-col">
+            <div class="macro-box">
+                <div class="macro-bar-fill" :style="{height: barPct(macros.c, targets.c) + '%'}"></div>
+                <div class="macro-box-content">
+                    <span :class="['macro-remaining', macros.c < 0 ? 'over' : '']">{{ macros.c.toFixed(1) }}<small style="font-size:10px;font-weight:300"> g</small></span>
+                    <span class="macro-consumed">{{ consumed.c.toFixed(1) }} g</span>
+                </div>
+            </div>
+            <div class="macro-box-name">Carboidrato</div>
         </div>
-        <div class="macro-box">
-            <div class="macro-box-label">Gordura</div>
-            <span class="macro-box-value">{{ Math.round(macros.g) }}</span><span class="macro-box-unit"> g</span>
+        <div class="macro-col">
+            <div class="macro-box">
+                <div class="macro-bar-fill" :style="{height: barPct(macros.g, targets.g) + '%'}"></div>
+                <div class="macro-box-content">
+                    <span :class="['macro-remaining', macros.g < 0 ? 'over' : '']">{{ macros.g.toFixed(1) }}<small style="font-size:10px;font-weight:300"> g</small></span>
+                    <span class="macro-consumed">{{ consumed.g.toFixed(1) }} g</span>
+                </div>
+            </div>
+            <div class="macro-box-name">Gordura</div>
         </div>
     </div>
 
@@ -375,7 +428,7 @@
                     </button>
                     <div class="food-info" @click="openSubstituteModal(mIndex, fIndex)">
                         <div :class="['food-name', food.checked ? 'checked' : '']">{{ food.name }}</div>
-                        <div class="food-macros">P {{ Math.round(food.p) }}g · C {{ Math.round(food.c) }}g · G {{ Math.round(food.g) }}g</div>
+                        <div class="food-macros">P {{ (+food.p).toFixed(1) }}g · C {{ (+food.c).toFixed(1) }}g · G {{ (+food.g).toFixed(1) }}g</div>
                     </div>
                     <span class="food-qty" @click.stop="openSubstituteModal(mIndex, fIndex)">{{ food.qty }}g</span>
                     <span class="food-kcal-pill" @click.stop="openSubstituteModal(mIndex, fIndex)">{{ Math.round(food.kcal) }} kcal</span>
@@ -386,15 +439,15 @@
             <div class="meal-macro-strip">
                 <div class="macro-strip-box">
                     <span class="macro-strip-label">Proteína</span>
-                    <span class="macro-strip-val">{{ Math.round(mealMacros(meal).p) }}g</span>
+                    <span class="macro-strip-val">{{ mealMacros(meal).p.toFixed(1) }}g</span>
                 </div>
                 <div class="macro-strip-box">
                     <span class="macro-strip-label">Carboidrato</span>
-                    <span class="macro-strip-val">{{ Math.round(mealMacros(meal).c) }}g</span>
+                    <span class="macro-strip-val">{{ mealMacros(meal).c.toFixed(1) }}g</span>
                 </div>
                 <div class="macro-strip-box">
                     <span class="macro-strip-label">Gordura</span>
-                    <span class="macro-strip-val">{{ Math.round(mealMacros(meal).g) }}g</span>
+                    <span class="macro-strip-val">{{ mealMacros(meal).g.toFixed(1) }}g</span>
                 </div>
             </div>
         </div>
@@ -428,23 +481,23 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
                 <div>
                     <label class="modal-label">Quantidade (g/ml)</label>
-                    <input v-model.number="modal.qty" @input="onQtyChange" type="number" class="modal-input">
+                    <input v-model.number="modal.qty" @input="onQtyChange" type="number" step="0.01" class="modal-input">
                 </div>
                 <div>
                     <label class="modal-label">Kcal (total)</label>
-                    <input v-model.number="modal.kcal" :readonly="!modal.isNewFood" type="number" class="modal-input">
+                    <input v-model.number="modal.kcal" :readonly="!modal.isNewFood" type="number" step="0.01" class="modal-input">
                 </div>
                 <div>
                     <label class="modal-label">Proteína (g)</label>
-                    <input v-model.number="modal.p" :readonly="!modal.isNewFood" type="number" class="modal-input">
+                    <input v-model.number="modal.p" :readonly="!modal.isNewFood" type="number" step="0.01" class="modal-input">
                 </div>
                 <div>
                     <label class="modal-label">Carboidrato (g)</label>
-                    <input v-model.number="modal.c" :readonly="!modal.isNewFood" type="number" class="modal-input">
+                    <input v-model.number="modal.c" :readonly="!modal.isNewFood" type="number" step="0.01" class="modal-input">
                 </div>
                 <div style="grid-column:span 2">
                     <label class="modal-label">Gordura (g)</label>
-                    <input v-model.number="modal.g" :readonly="!modal.isNewFood" type="number" class="modal-input">
+                    <input v-model.number="modal.g" :readonly="!modal.isNewFood" type="number" step="0.01" class="modal-input">
                 </div>
             </div>
 
@@ -523,22 +576,23 @@
         ]}
     ];
 
+    // Values per 100g — TACO 4ª edição (NEPA/UNICAMP)
     const initialFoodDB = [
-        { id:'1',  name:'Arroz cozido',      kcal:128, p:2.5,  c:28.1, g:0.2  },
-        { id:'2',  name:'Feijão carioca',    kcal:76,  p:4.8,  c:13.6, g:0.5  },
-        { id:'3',  name:'Frango grelhado',   kcal:159, p:32,   c:0,    g:2.5  },
-        { id:'4',  name:'Aveia',             kcal:394, p:13.9, c:66.6, g:8.5  },
-        { id:'5',  name:'Banana nanica',     kcal:92,  p:1.4,  c:23.8, g:0.1  },
-        { id:'6',  name:'Ovos cozidos',      kcal:146, p:13.3, c:0.6,  g:9.5  },
-        { id:'7',  name:'Pão de forma',      kcal:264, p:8.4,  c:52,   g:2.4  },
-        { id:'8',  name:'Queijo muçarela',   kcal:330, p:22.6, c:3,    g:25.2 },
-        { id:'9',  name:'Leite desnatado',   kcal:31,  p:3,    c:4.7,  g:0    },
-        { id:'10', name:'Leite em pó',       kcal:497, p:25.4, c:39.2, g:26.9 },
-        { id:'11', name:'Iogurte desnatado', kcal:41,  p:3.8,  c:5.8,  g:0.3  },
-        { id:'12', name:'Uva verde',         kcal:53,  p:0.7,  c:13.6, g:0.2  },
-        { id:'13', name:'Abacate',           kcal:96,  p:1.2,  c:6.0,  g:8.4  },
-        { id:'14', name:'Patinho moído',     kcal:219, p:35.9, c:0,    g:7.3  },
-        { id:'15', name:'Filé mignon suíno', kcal:106, p:22.0, c:0,    g:2.0  }
+        { id:'1',  name:'Arroz cozido',      kcal:128, p:2.5,  c:28.1, g:0.2  },  // TACO: arroz tipo 1 cozido
+        { id:'2',  name:'Feijão carioca',    kcal:76,  p:4.8,  c:13.6, g:0.5  },  // TACO: feijão carioca cozido
+        { id:'3',  name:'Frango grelhado',   kcal:159, p:32.0, c:0,    g:2.5  },  // TACO: frango peito s/pele grelhado
+        { id:'4',  name:'Aveia',             kcal:394, p:13.9, c:66.6, g:8.5  },  // TACO: aveia flocos crua
+        { id:'5',  name:'Banana nanica',     kcal:92,  p:1.4,  c:23.8, g:0.1  },  // TACO: banana nanica
+        { id:'6',  name:'Ovos cozidos',      kcal:146, p:13.3, c:0.6,  g:9.5  },  // TACO: ovo galinha inteiro cozido
+        { id:'7',  name:'Pão de forma',      kcal:264, p:8.4,  c:52.0, g:2.4  },  // TACO: pão de forma
+        { id:'8',  name:'Queijo muçarela',   kcal:330, p:22.6, c:3.0,  g:25.2 },  // TACO: queijo mussarela
+        { id:'9',  name:'Leite desnatado',   kcal:35,  p:3.6,  c:5.0,  g:0.1  },  // TACO: leite desnatado UHT
+        { id:'10', name:'Leite em pó',       kcal:362, p:34.7, c:52.7, g:0.9  },  // TACO: leite desnatado em pó
+        { id:'11', name:'Iogurte desnatado', kcal:41,  p:3.8,  c:5.8,  g:0.3  },  // TACO: iogurte natural desnatado
+        { id:'12', name:'Uva verde',         kcal:67,  p:0.6,  c:17.7, g:0.1  },  // TACO: uva itália crua
+        { id:'13', name:'Abacate',           kcal:96,  p:1.2,  c:6.0,  g:8.4  },  // TACO: abacate
+        { id:'14', name:'Patinho moído',     kcal:219, p:35.9, c:0,    g:7.3  },  // sem alteração (sem dado TACO moído grelhado)
+        { id:'15', name:'Filé mignon suíno', kcal:131, p:27.0, c:0,    g:2.1  }   // TACO: lombinho suíno grelhado (mais próximo)
     ];
 
     createApp({
@@ -574,6 +628,7 @@
                 calendar: cal, todayIndex: todayIdx, activeDay: todayIdx,
                 windowStart: Math.max(0, todayIdx - 3),
                 expandedMeals: {}, userDiets: {}, foodDatabase: [],
+                targets: { p: 150, c: 200, g: 60 },
                 modal: { isOpen:false, addMode:false, mIndex:null, fIndex:null,
                          isNewFood:false, selectedFoodId:'', name:'', qty:0, kcal:0, p:0, c:0, g:0 }
             };
@@ -591,17 +646,31 @@
                     : JSON.parse(JSON.stringify(dietRest));
             },
             macros() {
+                // Remaining = sum of unchecked items
                 let kcal=0,p=0,c=0,g=0;
                 this.currentDiet.forEach(m => m.foods.forEach(f => {
                     if (!f.checked) { kcal+=f.kcal; p+=f.p; c+=f.c; g+=f.g; }
                 }));
                 return {kcal,p,c,g};
             },
+            consumed() {
+                // Consumed = sum of checked items
+                let p=0,c=0,g=0;
+                this.currentDiet.forEach(m => m.foods.forEach(f => {
+                    if (f.checked) { p+=f.p; c+=f.c; g+=f.g; }
+                }));
+                return {p,c,g};
+            },
             sortedFoodDatabase() {
                 return [...this.foodDatabase].sort((a,b) => a.name.localeCompare(b.name));
             }
         },
         methods: {
+            barPct(remaining, target) {
+                const consumed = target - remaining;
+                const pct = Math.min(100, Math.max(0, (consumed / target) * 100));
+                return pct.toFixed(1);
+            },
             selectDay(i) {
                 this.activeDay = i;
                 this.expandedMeals = {};
@@ -708,24 +777,30 @@
                 b.style.backgroundSize = '100% 100vh';
                 b.style.backgroundRepeat = 'no-repeat';
                 b.style.backgroundPosition = 'top center';
+                document.body.classList.remove('theme-night');
                 if (h >= 6 && h < 16) {
                     // Day
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #ffffff ${cutEnd}%, #ffffff 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #0972e6 0%, #ffffff 100%)`;
                     b.style.backgroundColor = '#ffffff';
                     root.style.setProperty('--card-bg', '#f4f8f9');
                     root.style.setProperty('--macro-box-bg', '#d7e8fc');
+                    root.style.setProperty('--macro-bar-fill', 'rgba(9,114,230,0.18)');
                 } else if (h >= 16 && h < 19) {
                     // Afternoon
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #ffffff ${cutEnd}%, #ffffff 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #d89603 0%, #ffffff 100%)`;
                     b.style.backgroundColor = '#ffffff';
                     root.style.setProperty('--card-bg', '#f4f8f9');
                     root.style.setProperty('--macro-box-bg', '#f6eed7');
+                    root.style.setProperty('--macro-bar-fill', 'rgba(216,150,3,0.2)');
+                    document.body.classList.remove('theme-night');
                 } else {
                     // Night
+                    document.body.classList.add('theme-night');
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #2c409a ${cutEnd}%, #2c409a 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #030721 0%, #2c409a 100%)`;
                     b.style.backgroundColor = '#2c409a';
                     root.style.setProperty('--card-bg', 'rgba(255,255,255,0.08)');
                     root.style.setProperty('--macro-box-bg', '#1e2d4a');
+                    root.style.setProperty('--macro-bar-fill', 'rgba(255,255,255,0.1)');
                 }
             }
         },
