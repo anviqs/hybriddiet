@@ -29,7 +29,7 @@
             color: var(--black);
             margin: 0;
             padding: 0 0 48px;
-            background-color: transparent;
+            background-color: #0972e6;
             background-size: 100% 100vh;
             background-repeat: no-repeat;
             background-position: top center;
@@ -785,6 +785,7 @@
                 if (h >= 6 && h < 16) {
                     if (tc) tc.setAttribute('content', '#0972e6');
                     document.documentElement.style.backgroundColor = '#0972e6';
+                    b.style.backgroundColor = '#0972e6';
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #ffffff ${cutEnd}%, #ffffff 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #0972e6 0%, #ffffff 100%)`;
                     b.style.backgroundColor = '#ffffff';
                     root.style.setProperty('--card-bg', '#f4f8f9');
@@ -793,6 +794,7 @@
                 } else if (h >= 16 && h < 19) {
                     if (tc) tc.setAttribute('content', '#d89603');
                     document.documentElement.style.backgroundColor = '#d89603';
+                    b.style.backgroundColor = '#d89603';
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #ffffff ${cutEnd}%, #ffffff 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #d89603 0%, #ffffff 100%)`;
                     b.style.backgroundColor = '#ffffff';
                     root.style.setProperty('--card-bg', '#f4f8f9');
@@ -804,6 +806,7 @@
                     document.body.classList.add('theme-night');
                     if (tc) tc.setAttribute('content', '#030721');
                     document.documentElement.style.backgroundColor = '#030721';
+                    b.style.backgroundColor = '#030721';
                     b.style.backgroundImage = `linear-gradient(180deg, transparent 0%, transparent ${fadeStart}%, #2c409a ${cutEnd}%, #2c409a 100%), radial-gradient(ellipse 150% 120% at 50% -10%, #030721 0%, #2c409a 100%)`;
                     b.style.backgroundColor = '#2c409a';
                     root.style.setProperty('--card-bg', 'rgba(255,255,255,0.08)');
